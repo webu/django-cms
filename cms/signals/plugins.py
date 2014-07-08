@@ -17,7 +17,8 @@ def pre_save_plugins(**kwargs):
     elif plugin.placeholder_id:
         placeholder = Placeholder.objects.get(pk=plugin.placeholder_id)
     if placeholder:
-        cache.delete(placeholder.get_cache_key(plugin.language))
+        for key in placeholder.get_cache_keys(plugin.language):
+            cache.delete(key)
         attached_model = placeholder._get_attached_model()
         if attached_model == Page:
             Title.objects.filter(page=plugin.placeholder.page, language=plugin.language).update(
@@ -51,7 +52,8 @@ def pre_delete_plugins(**kwargs):
         except Placeholder.DoesNotExist:
             pass
     if placeholder:
-        cache.delete(placeholder.get_cache_key(plugin.language))
+        for key in placeholder.get_cache_keys(plugin.language):
+            cache.delete(key)
         attached_model = placeholder._get_attached_model()
         if attached_model == Page:
             Title.objects.filter(page=plugin.placeholder.page, language=plugin.language).update(

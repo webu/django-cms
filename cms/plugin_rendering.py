@@ -124,17 +124,19 @@ def render_placeholder(placeholder, context_to_copy, name_fallback="Placeholder"
     else:
         processors = None
     from django.core.cache import cache
+    if page:
+        template = page.template
+    else:
+        template = None
+    import pdb
+    pdb.set_trace()
     if get_cms_setting('PLACEHOLDER_CACHE'):
-        cache_key = placeholder.get_cache_key(lang)
+        cache_key = placeholder.get_cache_key(lang, request)
         if not edit and placeholder and not hasattr(placeholder, 'cache_checked'):
             cached_value = cache.get(cache_key)
             if not cached_value is None:
                 restore_sekizai_context(context, cached_value['sekizai'])
                 return mark_safe(cached_value['content'])
-    if page:
-        template = page.template
-    else:
-        template = None
 
     plugins = [plugin for plugin in get_plugins(request, placeholder, template, lang=lang)]
 

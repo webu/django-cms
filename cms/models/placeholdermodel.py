@@ -62,11 +62,33 @@ class Placeholder(models.Model):
     def get_copy_url(self):
         return self._get_url('copy_plugins')
 
-    def get_cache_key(self, lang):
+    def get_cache_keys(self, lang):
+        keys = []
         cache_key = '%srender_placeholder:%s.%s' % (get_cms_setting("CACHE_PREFIX"), self.pk, str(lang))
         if settings.USE_TZ:
             tz_name = force_text(get_current_timezone_name(), errors='ignore')
             cache_key += '.%s' % tz_name.encode('ascii', 'ignore').decode('ascii').replace(' ', '_')
+        for plugin in [
+            p.get_plugin_class_instance() 
+            for p in self.get_plugins(lang) 
+            if hasattr(p.get_plugin_class(), 'get_cache_key')
+        ]:
+            cache_key+='.%s'
+            keys+=[cache_key % s for s in plugin.get_all_cache_keys()]
+        if not keys:
+            keys.append(cache_key)
+        return keys
+
+    def get_cache_key(self, lang, request):
+        cache_key = '%srender_placeholder:%s.%s' % (get_cms_setting("CACHE_PREFIX"), self.pk, str(lang))
+        if settings.USE_TZ:
+            tz_name = force_text(get_current_timezone_name(), errors='ignore')
+            cache_key += '.%s' % tz_name.encode('ascii', 'ignore').decode('ascii').replace(' ', '_')
+        cache_key+=''.join(('.%s' % plugin.get_cache_key(request) for plugin in [
+            p.get_plugin_class_instance() 
+            for p in self.get_plugins(lang) 
+            if hasattr(p.get_plugin_class(), 'get_cache_key')
+        ]))
         return cache_key
 
     def _get_url(self, key, pk=None):
