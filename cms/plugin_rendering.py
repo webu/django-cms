@@ -128,8 +128,6 @@ def render_placeholder(placeholder, context_to_copy, name_fallback="Placeholder"
         template = page.template
     else:
         template = None
-    import pdb
-    pdb.set_trace()
     if get_cms_setting('PLACEHOLDER_CACHE'):
         cache_key = placeholder.get_cache_key(lang, request)
         if not edit and placeholder and not hasattr(placeholder, 'cache_checked'):
